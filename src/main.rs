@@ -15,9 +15,8 @@ fn main() {
 
         match opcode {
             // MOV instruction
-            0b00_100010 => {
+            0b100010 => {
                 println!("MOV instruction found at index {}", i);
-                // Currently, we only want to handle situations where the W flag is 1 (word operations)
 
                 match remainder {
                     0b01 => {
