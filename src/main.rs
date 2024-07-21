@@ -54,19 +54,31 @@ fn main() {
             );
             let d_field = (byte >> 1) & 0b1;
             let w_field = byte & 0b1;
-            let reg_is_dest = d_field == 1;
+            let reg_is_dest = match d_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled D field at index {}", i),
+            };
+            let w_field_is_1 = match w_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled W field at index {}", i),
+            };
 
             let byte_2 = buf_iter.next().unwrap().1;
             let mod_field = (byte_2 >> 6) & 0b11;
             let reg_field = (byte_2 >> 3) & 0b111;
             let rm_field = byte_2 & 0b111;
 
-            let reg = decode_register_field(reg_field, reg_is_dest);
+            let reg = decode_register_field(reg_field, w_field_is_1);
+            // println!("Register: {:08b}", reg_field);
+            // println!("w_field: {}", w_field);
+            // println!("w_field_is_1: {}", w_field_is_1);
 
             match mod_field {
                 0b11 => {
                     println!("Register mode found at index {}", i);
-                    let rm = decode_rm_field_at_mod_11(rm_field, w_field == 1);
+                    let rm = decode_rm_field_at_mod_11(rm_field, w_field_is_1);
 
                     if reg_is_dest {
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
