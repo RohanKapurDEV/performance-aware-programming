@@ -52,63 +52,148 @@ fn main() {
                 "Found a register/memory-to/from-register instruction at index {}",
                 i
             );
-            //
+            let d_field = (byte >> 1) & 0b1;
+            let w_field = byte & 0b1;
+            let reg_is_dest = d_field == 1;
+
+            let byte_2 = buf_iter.next().unwrap().1;
+            let mod_field = (byte_2 >> 6) & 0b11;
+            let reg_field = (byte_2 >> 3) & 0b111;
+            let rm_field = byte_2 & 0b111;
+
+            let reg = decode_register_field(reg_field, reg_is_dest);
+
+            match mod_field {
+                0b11 => {
+                    println!("Register mode found at index {}", i);
+                    let rm = decode_rm_field_at_mod_11(rm_field, w_field == 1);
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
+                    } else {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", rm, reg));
+                    }
+                }
+
+                0b10 => {
+                    println!("Memory mode (16bit displacement) found at index {}", i);
+                    let byte_3 = buf_iter.next().unwrap().1;
+                    let byte_4 = buf_iter.next().unwrap().1;
+                    let displacement = (*byte_3 as u16) << 8 | *byte_4 as u16;
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = format!("[{}+{}]", rm, displacement); // idk operand is probably the wrong term here but i dont care
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b01 => {
+                    println!("Memory mode (8bit displacement) found at index {}", i);
+                    let displacement = buf_iter.next().unwrap().1; // byte3 is the 8bit displacement
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = format!("[{}+{}]", rm, displacement);
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b00 => {
+                    println!("Memory mode (no displacement)* found at index {}", i);
+
+                    if rm_field == 0b110 {
+                        let byte_3 = buf_iter.next().unwrap().1;
+                        let byte_4 = buf_iter.next().unwrap().1;
+                        let address = u16::from_le_bytes([*byte_3, *byte_4]);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("mov {}, {:04X}\n", reg, address));
+                        } else {
+                            assembled_file_str.push_str(&format!("mov {:04X}, {}\n", address, reg));
+                        }
+                    } else {
+                        let rm = decode_rm_field_at_mod_00(rm_field);
+                        let operand = format!("[{}]", rm);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("mov {}, {}\n", reg, operand));
+                        } else {
+                            assembled_file_str.push_str(&format!("mov {}, {}\n", operand, reg));
+                        }
+                    }
+                }
+
+                _ => {
+                    println!("Unhandled mod field at index {}", i);
+                }
+            }
 
             continue;
         }
-
-        // let opcode = (byte >> 2) & 0b111111;
-        // let remainder = byte & 0b11;
-
-        // match opcode {
-        //     // MOV instruction
-        //     0b100010 => {
-        //         println!("MOV instruction found at index {}", i);
-
-        //         match remainder {
-        //             0b01 => {
-        //                 println!("D flag is 0 and W flag is 1");
-        //                 let (_, byte) = buf_iter.next().unwrap();
-
-        //                 let (reg, rm) = parse_second_mov_byte(byte, true);
-        //                 assembled_file_str.push_str(&format!("mov {}, {}\n", rm, reg));
-        //             }
-        //             0b11 => {
-        //                 println!("D flag is 1 and W flag is 1");
-        //                 let (_, byte) = buf_iter.next().unwrap();
-
-        //                 let (reg, rm) = parse_second_mov_byte(byte, true);
-        //                 assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
-        //             }
-        //             0b10 => {
-        //                 println!("D flag is 1 and W flag is 0");
-        //                 let (_, byte) = buf_iter.next().unwrap();
-
-        //                 let (reg, rm) = parse_second_mov_byte(byte, false);
-        //                 assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
-        //             }
-        //             0b00 => {
-        //                 println!("D flag is 0 and W flag is 0");
-        //                 let (_, byte) = buf_iter.next().unwrap();
-
-        //                 let (reg, rm) = parse_second_mov_byte(byte, false);
-        //                 assembled_file_str.push_str(&format!("mov {}, {}\n", rm, reg));
-        //             }
-
-        //             _ => {
-        //                 println!("Unhandled bit pattern for remainder");
-        //             }
-        //         }
-        //     }
-
-        //     _ => {
-        //         println!("Unknown opcode at index {}", i);
-        //     }
-        // }
     }
 
     println!("{}", assembled_file_str);
     println!("File processed!")
+}
+
+fn decode_rm_field_at_mod_11<'a>(rm_field: u8, w_field: bool) -> &'a str {
+    match w_field {
+        true => match rm_field {
+            0b000 => "ax",
+            0b001 => "cx",
+            0b010 => "dx",
+            0b011 => "bx",
+            0b100 => "sp",
+            0b101 => "bp",
+            0b110 => "si",
+            0b111 => "di",
+            _ => "Unknown",
+        },
+        false => match rm_field {
+            0b000 => "al",
+            0b001 => "cl",
+            0b010 => "dl",
+            0b011 => "bl",
+            0b100 => "ah",
+            0b101 => "ch",
+            0b110 => "dh",
+            0b111 => "bh",
+            _ => "Unknown",
+        },
+    }
+}
+
+fn decode_rm_field_at_mod_10_and_mod_01<'a>(rm_field: u8) -> &'a str {
+    match rm_field {
+        0b000 => "bx+si",
+        0b001 => "bx+di",
+        0b010 => "bp+si",
+        0b011 => "bp+di",
+        0b100 => "si",
+        0b101 => "di",
+        0b110 => "bp",
+        0b111 => "bx",
+        _ => "Unknown",
+    }
+}
+
+fn decode_rm_field_at_mod_00(rm_field: u8) -> &'static str {
+    match rm_field {
+        0b000 => "bx+si",
+        0b001 => "bx+di",
+        0b010 => "bp+si",
+        0b011 => "bp+di",
+        0b100 => "si",
+        0b101 => "di",
+        // 0b110 => "DIRECT ADDRESSING", *We handle this explicitly in the calling code for this function*
+        0b111 => "bx",
+        _ => "Unknown",
+    }
 }
 
 fn decode_register_field<'a>(reg_field: u8, w_field: bool) -> &'a str {
@@ -137,76 +222,3 @@ fn decode_register_field<'a>(reg_field: u8, w_field: bool) -> &'a str {
         },
     }
 }
-
-// /// Returns (REG, R/M) fields
-// fn parse_second_mov_byte(byte: &u8, w_field: bool) -> (&str, &str) {
-//     let mod_field = (byte >> 6) & 0b11;
-//     let reg_field = (byte >> 3) & 0b111;
-//     let rm_field = byte & 0b111;
-
-//     if let 0b11 = mod_field {
-//         println!("Register addressing mode");
-
-//         match w_field {
-//             true => {
-//                 let reg = match reg_field {
-//                     0b000 => "ax",
-//                     0b001 => "cx",
-//                     0b010 => "dx",
-//                     0b011 => "bx",
-//                     0b100 => "sp",
-//                     0b101 => "bp",
-//                     0b110 => "si",
-//                     0b111 => "di",
-//                     _ => "Unknown",
-//                 };
-
-//                 let rm = match rm_field {
-//                     0b000 => "ax",
-//                     0b001 => "cx",
-//                     0b010 => "dx",
-//                     0b011 => "bx",
-//                     0b100 => "sp",
-//                     0b101 => "bp",
-//                     0b110 => "si",
-//                     0b111 => "di",
-//                     _ => "Unknown",
-//                 };
-
-//                 return (reg, rm);
-//             }
-
-//             false => {
-//                 let reg = match reg_field {
-//                     0b000 => "al",
-//                     0b001 => "cl",
-//                     0b010 => "dl",
-//                     0b011 => "bl",
-//                     0b100 => "ah",
-//                     0b101 => "ch",
-//                     0b110 => "dh",
-//                     0b111 => "bh",
-//                     _ => "Unknown",
-//                 };
-
-//                 let rm = match rm_field {
-//                     0b000 => "al",
-//                     0b001 => "cl",
-//                     0b010 => "dl",
-//                     0b011 => "bl",
-//                     0b100 => "ah",
-//                     0b101 => "ch",
-//                     0b110 => "dh",
-//                     0b111 => "bh",
-//                     _ => "Unknown",
-//                 };
-
-//                 return (reg, rm);
-//             }
-//         }
-//     } else {
-//         println!("Unhandled addressing mode - for now")
-//     }
-
-//     return ("Unknown", "Unknown");
-// }
