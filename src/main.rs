@@ -71,9 +71,6 @@ fn main() {
             let rm_field = byte_2 & 0b111;
 
             let reg = decode_register_field(reg_field, w_field_is_1);
-            // println!("Register: {:08b}", reg_field);
-            // println!("w_field: {}", w_field);
-            // println!("w_field_is_1: {}", w_field_is_1);
 
             match mod_field {
                 0b11 => {
