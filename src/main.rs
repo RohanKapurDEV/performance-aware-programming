@@ -5,7 +5,7 @@ use std::{
 };
 
 fn main() {
-    let file_path = "./listing_38";
+    let file_path = "./listing_39";
     let file_buffer = fs::read(file_path).expect("Unable to open file");
 
     let mut assembled_file_str = "bits 16\n\n".to_string();
@@ -33,10 +33,10 @@ fn main() {
                 0b1 => {
                     let data_1 = buf_iter.next().unwrap().1;
                     let data_2 = buf_iter.next().unwrap().1;
-                    let data = (*data_1 as u16) << 8 | *data_2 as u16;
+                    let displacement = u16::from_le_bytes([*data_1, *data_2]);
                     let reg = decode_register_field(reg_field, true);
 
-                    assembled_file_str.push_str(&format!("mov {}, {}\n", reg, data));
+                    assembled_file_str.push_str(&format!("mov {}, {}\n", reg, displacement));
                 }
                 _ => {
                     println!("Unhandled W field at index {}", i);
@@ -88,7 +88,7 @@ fn main() {
                     println!("Memory mode (16bit displacement) found at index {}", i);
                     let byte_3 = buf_iter.next().unwrap().1;
                     let byte_4 = buf_iter.next().unwrap().1;
-                    let displacement = (*byte_3 as u16) << 8 | *byte_4 as u16;
+                    let displacement = u16::from_le_bytes([*byte_3, *byte_4]);
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
                     let operand = format!("[{}+{}]", rm, displacement); // idk operand is probably the wrong term here but i dont care
 
