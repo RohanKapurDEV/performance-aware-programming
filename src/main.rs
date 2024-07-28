@@ -5,7 +5,7 @@ use std::{
 };
 
 fn main() {
-    let file_path = "./listing_39";
+    let file_path = "./listing_40";
     let file_buffer = fs::read(file_path).expect("Unable to open file");
 
     let mut assembled_file_str = "bits 16\n\n".to_string();
@@ -122,7 +122,7 @@ fn main() {
                         let address = i16::from_le_bytes([*byte_3, *byte_4]);
 
                         if reg_is_dest {
-                            assembled_file_str.push_str(&format!("mov {}, {:04X}\n", reg, address));
+                            assembled_file_str.push_str(&format!("mov {}, [{}]\n", reg, address));
                         } else {
                             assembled_file_str.push_str(&format!("mov {:04X}, {}\n", address, reg));
                         }
@@ -283,14 +283,14 @@ fn main() {
                         let immediate = match w_field {
                             0b0 => {
                                 let data = buf_iter.next().unwrap().1;
-                                format!("{}", data)
+                                format!("byte {}", data)
                             }
 
                             0b1 => {
                                 let data_1 = buf_iter.next().unwrap().1;
                                 let data_2 = buf_iter.next().unwrap().1;
                                 let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                                format!("{}", displacement)
+                                format!("word {}", displacement)
                             }
 
                             _ => {
@@ -321,12 +321,10 @@ fn main() {
             let byte_2 = buf_iter.next().unwrap().1;
             let byte_3 = buf_iter.next().unwrap().1;
 
-            let memory_address = i16::from_le_bytes([*byte_2, *byte_3]);
+            let memory_location = i16::from_le_bytes([*byte_2, *byte_3]);
 
-            assembled_file_str.push_str(&format!(
-                "mov {}, [{:04X}]\n",
-                accumulator_reg, memory_address
-            ));
+            assembled_file_str
+                .push_str(&format!("mov {}, [{}]\n", accumulator_reg, memory_location));
         }
 
         if let 0b1010001 = first_seven_bits {
@@ -342,12 +340,10 @@ fn main() {
             let byte_2 = buf_iter.next().unwrap().1;
             let byte_3 = buf_iter.next().unwrap().1;
 
-            let memory_address = i16::from_le_bytes([*byte_2, *byte_3]);
+            let memory_location = i16::from_le_bytes([*byte_2, *byte_3]);
 
-            assembled_file_str.push_str(&format!(
-                "mov [{:04X}], {}\n",
-                memory_address, accumulator_reg
-            ));
+            assembled_file_str
+                .push_str(&format!("mov [{}], {}\n", memory_location, accumulator_reg));
         }
     }
 
