@@ -16,6 +16,7 @@ fn main() {
     while let Some((i, byte)) = buf_iter.next() {
         let first_four_bits = (byte >> 4) & 0b1111; // [immediate-to-register]
         let first_six_bits = (byte >> 2) & 0b111111; // [register/memory-to/from-register]
+        let first_seven_bits = (byte >> 1) & 0b1111111; // [immediate-to-register/memory]
 
         // Checking the first four bits
         if let 0b1011 = first_four_bits {
@@ -33,13 +34,13 @@ fn main() {
                 0b1 => {
                     let data_1 = buf_iter.next().unwrap().1;
                     let data_2 = buf_iter.next().unwrap().1;
-                    let displacement = u16::from_le_bytes([*data_1, *data_2]);
+                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
                     let reg = decode_register_field(reg_field, true);
 
                     assembled_file_str.push_str(&format!("mov {}, {}\n", reg, displacement));
                 }
                 _ => {
-                    println!("Unhandled W field at index {}", i);
+                    panic!("Unhandled W field at index {}", i);
                 }
             }
 
@@ -88,7 +89,7 @@ fn main() {
                     println!("Memory mode (16bit displacement) found at index {}", i);
                     let byte_3 = buf_iter.next().unwrap().1;
                     let byte_4 = buf_iter.next().unwrap().1;
-                    let displacement = u16::from_le_bytes([*byte_3, *byte_4]);
+                    let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
                     let operand = format!("[{}+{}]", rm, displacement); // idk operand is probably the wrong term here but i dont care
 
@@ -118,7 +119,7 @@ fn main() {
                     if rm_field == 0b110 {
                         let byte_3 = buf_iter.next().unwrap().1;
                         let byte_4 = buf_iter.next().unwrap().1;
-                        let address = u16::from_le_bytes([*byte_3, *byte_4]);
+                        let address = i16::from_le_bytes([*byte_3, *byte_4]);
 
                         if reg_is_dest {
                             assembled_file_str.push_str(&format!("mov {}, {:04X}\n", reg, address));
@@ -138,11 +139,215 @@ fn main() {
                 }
 
                 _ => {
-                    println!("Unhandled mod field at index {}", i);
+                    panic!("Unhandled mod field at index {}", i);
                 }
             }
 
             continue;
+        }
+
+        // Checking the first seven bits
+        if let 0b1100011 = first_seven_bits {
+            println!(
+                "Found an immediate-to-register/memory instruction at index {}",
+                i
+            );
+            let w_field = byte & 0b1;
+            let byte_2 = buf_iter.next().unwrap().1;
+
+            let reg_field = (byte_2 >> 3) & 0b111;
+            assert!(reg_field == 0b000); // the REG field should always be 0b000 for this instruction
+
+            let mod_field = (byte_2 >> 6) & 0b11;
+            let rm_field = byte_2 & 0b111;
+
+            match mod_field {
+                0b11 => {
+                    println!("Register mode found at index {}", i);
+
+                    let rm = decode_rm_field_at_mod_11(rm_field, w_field == 0b1);
+                    let immediate = match w_field {
+                        0b0 => {
+                            let data = buf_iter.next().unwrap().1;
+                            format!("{}", data)
+                        }
+
+                        0b1 => {
+                            let data_1 = buf_iter.next().unwrap().1;
+                            let data_2 = buf_iter.next().unwrap().1;
+                            let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                            format!("{}", displacement)
+                        }
+
+                        _ => {
+                            panic!("Unhandled W field at index {}", i);
+                        }
+                    };
+
+                    assembled_file_str.push_str(&format!("mov {}, [{}]\n", rm, immediate));
+                }
+
+                0b10 => {
+                    println!("Memory mode (16bit displacement) found at index {}", i);
+
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+
+                    let byte_3 = buf_iter.next().unwrap().1;
+                    let byte_4 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
+
+                    let operand = format!("[{}+{}]", rm, displacement);
+
+                    let immediate = match w_field {
+                        0b0 => {
+                            let data = buf_iter.next().unwrap().1;
+                            format!("byte {}", data)
+                        }
+
+                        0b1 => {
+                            let data_1 = buf_iter.next().unwrap().1;
+                            let data_2 = buf_iter.next().unwrap().1;
+                            let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                            format!("word {}", displacement)
+                        }
+
+                        _ => {
+                            panic!("Unhandled W field at index {}", i);
+                        }
+                    };
+
+                    assembled_file_str.push_str(&format!("mov {}, {}\n", operand, immediate));
+                }
+
+                0b01 => {
+                    println!("Memory mode (8bit displacement) found at index {}", i);
+
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let displacement = buf_iter.next().unwrap().1;
+                    let operand = format!("[{}+{}]", rm, displacement);
+
+                    let immediate = match w_field {
+                        0b0 => {
+                            let data = buf_iter.next().unwrap().1;
+                            format!("byte {}", data)
+                        }
+
+                        0b1 => {
+                            let data_1 = buf_iter.next().unwrap().1;
+                            let data_2 = buf_iter.next().unwrap().1;
+                            let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                            format!("word {}", displacement)
+                        }
+
+                        _ => {
+                            panic!("Unhandled W field at index {}", i);
+                        }
+                    };
+
+                    assembled_file_str.push_str(&format!("mov {}, {}\n", operand, immediate));
+                }
+
+                0b00 => {
+                    println!("Memory mode (no displacement)* found at index {}", i);
+
+                    let rm = decode_rm_field_at_mod_00(rm_field);
+
+                    if rm_field == 0b110 {
+                        let byte_3 = buf_iter.next().unwrap().1;
+                        let byte_4 = buf_iter.next().unwrap().1;
+                        let address = i16::from_le_bytes([*byte_3, *byte_4]);
+
+                        let immediate = match w_field {
+                            0b0 => {
+                                let data = buf_iter.next().unwrap().1;
+                                format!("byte {}", data)
+                            }
+
+                            0b1 => {
+                                let data_1 = buf_iter.next().unwrap().1;
+                                let data_2 = buf_iter.next().unwrap().1;
+                                let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                                format!("word {}", displacement)
+                            }
+
+                            _ => {
+                                panic!("Unhandled W field at index {}", i);
+                            }
+                        };
+
+                        assembled_file_str
+                            .push_str(&format!("mov {:04X}, {}\n", address, immediate));
+                    } else {
+                        let operand = format!("[{}]", rm);
+
+                        let immediate = match w_field {
+                            0b0 => {
+                                let data = buf_iter.next().unwrap().1;
+                                format!("{}", data)
+                            }
+
+                            0b1 => {
+                                let data_1 = buf_iter.next().unwrap().1;
+                                let data_2 = buf_iter.next().unwrap().1;
+                                let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                                format!("{}", displacement)
+                            }
+
+                            _ => {
+                                panic!("Unhandled W field at index {}", i);
+                            }
+                        };
+
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", operand, immediate));
+                    }
+                }
+
+                _ => {
+                    panic!("Unhandled mod field at index {}", i);
+                }
+            };
+        }
+
+        if let 0b1010000 = first_seven_bits {
+            println!("Found a memory-to-accumulator instruction at index {}", i);
+
+            let w_field = byte & 0b1;
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            let byte_2 = buf_iter.next().unwrap().1;
+            let byte_3 = buf_iter.next().unwrap().1;
+
+            let memory_address = i16::from_le_bytes([*byte_2, *byte_3]);
+
+            assembled_file_str.push_str(&format!(
+                "mov {}, [{:04X}]\n",
+                accumulator_reg, memory_address
+            ));
+        }
+
+        if let 0b1010001 = first_seven_bits {
+            println!("Found an accumulator-to-memory instruction at index {}", i);
+
+            let w_field = byte & 0b1;
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            let byte_2 = buf_iter.next().unwrap().1;
+            let byte_3 = buf_iter.next().unwrap().1;
+
+            let memory_address = i16::from_le_bytes([*byte_2, *byte_3]);
+
+            assembled_file_str.push_str(&format!(
+                "mov [{:04X}], {}\n",
+                memory_address, accumulator_reg
+            ));
         }
     }
 
