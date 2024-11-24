@@ -12,6 +12,7 @@ use cli::Args;
 fn main() {
     let args = Args::parse();
     let file_path = args.asm_bin_path;
+    let outout_file = args.output_file;
     println!("Selected file: {}", file_path);
 
     let file_buffer = fs::read(file_path).expect("Unable to open file");
@@ -356,7 +357,12 @@ fn main() {
     }
 
     println!("{}", assembled_file_str);
-    println!("File processed!")
+    println!("File processed!");
+
+    if let Some(path) = outout_file {
+        fs::write(&path, assembled_file_str).expect("Unable to write file");
+        println!("File written to {}", path);
+    }
 }
 
 fn decode_rm_field_at_mod_11<'a>(rm_field: u8, w_field: bool) -> &'a str {
