@@ -16,10 +16,10 @@ fn main() {
     println!("Selected file: {}", file_path);
 
     let file_buffer = fs::read(file_path).expect("Unable to open file");
-
-    let mut assembled_file_str = "bits 16\n\n".to_string();
-
     let mut buf_iter: Peekable<Enumerate<Iter<u8>>> = file_buffer.iter().enumerate().peekable();
+
+    // Final assembled string of the file - mutated over the course of the loop
+    let mut assembled_file_str = "bits 16\n\n".to_string();
 
     // Loop through the buffer
     while let Some((i, byte)) = buf_iter.next() {
@@ -64,11 +64,13 @@ fn main() {
             );
             let d_field = (byte >> 1) & 0b1;
             let w_field = byte & 0b1;
+
             let reg_is_dest = match d_field {
                 0b0 => false,
                 0b1 => true,
                 _ => panic!("Unhandled D field at index {}", i),
             };
+
             let w_field_is_1 = match w_field {
                 0b0 => false,
                 0b1 => true,
@@ -84,7 +86,7 @@ fn main() {
 
             match mod_field {
                 0b11 => {
-                    println!("Register mode found at index {}", i);
+                    println!("Register-to-register mode found at index {}", i);
                     let rm = decode_rm_field_at_mod_11(rm_field, w_field_is_1);
 
                     if reg_is_dest {

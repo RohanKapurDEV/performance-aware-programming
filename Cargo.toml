@@ -1,5 +1,5 @@
 [package]
-name = "ix-decode"
+name = "sim8086"
 version = "0.1.0"
 edition = "2021"
 
