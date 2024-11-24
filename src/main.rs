@@ -1,11 +1,19 @@
+use clap::Parser;
 use std::{
     fs,
     iter::{Enumerate, Peekable},
     slice::Iter,
 };
 
+mod cli;
+
+use cli::Args;
+
 fn main() {
-    let file_path = "./listing_40";
+    let args = Args::parse();
+    let file_path = args.asm_bin_path;
+    println!("Selected file: {}", file_path);
+
     let file_buffer = fs::read(file_path).expect("Unable to open file");
 
     let mut assembled_file_str = "bits 16\n\n".to_string();
