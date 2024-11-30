@@ -71,7 +71,7 @@ fn main() {
                 _ => panic!("Unhandled D field at index {}", i),
             };
 
-            let w_field_is_1 = match w_field {
+            let is_wide = match w_field {
                 0b0 => false,
                 0b1 => true,
                 _ => panic!("Unhandled W field at index {}", i),
@@ -82,12 +82,12 @@ fn main() {
             let reg_field = (byte_2 >> 3) & 0b111;
             let rm_field = byte_2 & 0b111;
 
-            let reg = decode_register_field(reg_field, w_field_is_1);
+            let reg = decode_register_field(reg_field, is_wide);
 
             match mod_field {
                 0b11 => {
                     println!("Register-to-register mode found at index {}", i);
-                    let rm = decode_rm_field_at_mod_11(rm_field, w_field_is_1);
+                    let rm = decode_rm_field_at_mod_11(rm_field, is_wide);
 
                     if reg_is_dest {
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
