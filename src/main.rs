@@ -195,7 +195,7 @@ fn main() {
                         }
                     };
 
-                    assembled_file_str.push_str(&format!("mov {}, [{}]\n", rm, immediate));
+                    assembled_file_str.push_str(&format!("mov {}, {}\n", rm, immediate));
                 }
 
                 0b10 => {
