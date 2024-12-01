@@ -213,7 +213,10 @@ fn main() {
                     let byte_4 = buf_iter.next().unwrap().1;
                     let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
 
-                    let operand = format!("[{}+{}]", rm, displacement);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
 
                     let immediate = match w_field {
                         0b0 => {
@@ -240,8 +243,11 @@ fn main() {
                     println!("Memory mode (8bit displacement) found at index {}", i);
 
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
-                    let displacement = buf_iter.next().unwrap().1;
-                    let operand = format!("[{}+{}]", rm, displacement);
+                    let displacement = *buf_iter.next().unwrap().1 as i8;
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
 
                     let immediate = match w_field {
                         0b0 => {
