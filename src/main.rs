@@ -118,7 +118,10 @@ fn main() {
                     println!("Memory mode (8bit displacement) found at index {}", i);
                     let displacement = *buf_iter.next().unwrap().1 as i8; // byte3 is the 8bit displacement
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
-                    let operand = format!("[{}+{}]", rm, displacement);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement.abs()),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
 
                     if reg_is_dest {
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, operand));
