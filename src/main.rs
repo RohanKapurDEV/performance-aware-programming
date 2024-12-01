@@ -25,7 +25,7 @@ fn main() {
     while let Some((i, byte)) = buf_iter.next() {
         let first_four_bits = (byte >> 4) & 0b1111; // [immediate-to-register]
         let first_six_bits = (byte >> 2) & 0b111111; // [register/memory-to/from-register]
-        let first_seven_bits = (byte >> 1) & 0b1111111; // [immediate-to-register/memory]
+        let first_seven_bits = (byte >> 1) & 0b1111111; // [immediate-to-register/memory, memory-to-accumulator, accumulator-to-memory]
 
         // Checking the first four bits
         if let 0b1011 = first_four_bits {
