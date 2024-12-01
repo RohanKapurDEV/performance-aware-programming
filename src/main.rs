@@ -103,7 +103,7 @@ fn main() {
                     let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
                     let operand = match displacement.is_negative() {
-                        true => format!("[{}{}]", rm, displacement.abs()),
+                        true => format!("[{}{}]", rm, displacement),
                         false => format!("[{}+{}]", rm, displacement),
                     };
 
