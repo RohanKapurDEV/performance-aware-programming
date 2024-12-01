@@ -102,7 +102,10 @@ fn main() {
                     let byte_4 = buf_iter.next().unwrap().1;
                     let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
-                    let operand = format!("[{}+{}]", rm, displacement); // idk operand is probably the wrong term here but i dont care
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement.abs()),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
 
                     if reg_is_dest {
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, operand));
