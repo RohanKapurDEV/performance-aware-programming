@@ -116,7 +116,7 @@ fn main() {
 
                 0b01 => {
                     println!("Memory mode (8bit displacement) found at index {}", i);
-                    let displacement = buf_iter.next().unwrap().1; // byte3 is the 8bit displacement
+                    let displacement = *buf_iter.next().unwrap().1 as i8; // byte3 is the 8bit displacement
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
                     let operand = format!("[{}+{}]", rm, displacement);
 
