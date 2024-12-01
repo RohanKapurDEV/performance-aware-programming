@@ -119,7 +119,7 @@ fn main() {
                     let displacement = *buf_iter.next().unwrap().1 as i8; // byte3 is the 8bit displacement
                     let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
                     let operand = match displacement.is_negative() {
-                        true => format!("[{}{}]", rm, displacement.abs()),
+                        true => format!("[{}{}]", rm, displacement),
                         false => format!("[{}+{}]", rm, displacement),
                     };
 
