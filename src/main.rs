@@ -12,7 +12,7 @@ use cli::Args;
 fn main() {
     let args = Args::parse();
     let file_path = args.asm_bin_path;
-    let outout_file = args.output_file;
+    let output_file = args.output_file;
     println!("Selected file: {}", file_path);
 
     let file_buffer = fs::read(file_path).expect("Unable to open file");
@@ -23,16 +23,14 @@ fn main() {
 
     // Loop through the buffer
     while let Some((i, byte)) = buf_iter.next() {
-        let first_four_bits = (byte >> 4) & 0b1111; // [immediate-to-register]
-        let first_six_bits = (byte >> 2) & 0b111111; // [register/memory-to/from-register]
-        let first_seven_bits = (byte >> 1) & 0b1111111; // [immediate-to-register/memory, memory-to-accumulator, accumulator-to-memory]
-
-        // MOV instructions
+        let first_four_bits = (byte >> 4) & 0b1111_u8; // [immediate-to-register]
+        let first_six_bits = (byte >> 2) & 0b111111_u8; // [register/memory-to/from-register]
+        let first_seven_bits = (byte >> 1) & 0b1111111_u8; // [immediate-to-register/memory, memory-to-accumulator, accumulator-to-memory]
 
         // Checking the first four bits
         if let 0b1011 = first_four_bits {
             println!("Found an immediate-to-register instruction at index {}", i);
-            let w_field = (byte >> 3) & 0b1;
+            let w_field = (byte >> 3) & 0b1_u8;
             let reg_field = byte & 0b111;
 
             match w_field {
@@ -64,7 +62,7 @@ fn main() {
                 "Found a register/memory-to/from-register instruction at index {}",
                 i
             );
-            let d_field = (byte >> 1) & 0b1;
+            let d_field = (byte >> 1) & 0b1_u8;
             let w_field = byte & 0b1;
 
             let reg_is_dest = match d_field {
@@ -80,8 +78,8 @@ fn main() {
             };
 
             let byte_2 = buf_iter.next().unwrap().1;
-            let mod_field = (byte_2 >> 6) & 0b11;
-            let reg_field = (byte_2 >> 3) & 0b111;
+            let mod_field = (byte_2 >> 6) & 0b11_u8;
+            let reg_field = (byte_2 >> 3) & 0b111_u8;
             let rm_field = byte_2 & 0b111;
 
             let reg = decode_register_field(reg_field, is_wide);
@@ -165,6 +163,33 @@ fn main() {
             continue;
         }
 
+        if let 0b000000 = first_six_bits {
+            println!(
+                "Found an ADD Reg/memory with register to either instruction at index {}",
+                i
+            );
+            let d_field = (byte >> 1) & 0b1_u8;
+            let w_field = byte & 0b1;
+
+            let reg_is_dest = match d_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled D field at index {}", i),
+            };
+
+            let is_wide = match w_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled W field at index {}", i),
+            };
+
+            let byte_2 = buf_iter.next().unwrap().1;
+
+            let mod_field = (byte_2 >> 6) & 0b11_u8;
+            let reg_field = (byte_2 >> 3) & 0b111_u8;
+            let rm_field = byte_2 & 0b111;
+        }
+
         // Checking the first seven bits
         if let 0b1100011 = first_seven_bits {
             println!(
@@ -174,10 +199,10 @@ fn main() {
             let w_field = byte & 0b1;
             let byte_2 = buf_iter.next().unwrap().1;
 
-            let reg_field = (byte_2 >> 3) & 0b111;
-            assert!(reg_field == 0b000); // the REG field should always be 0b000 for this instruction
+            let reg_field = (byte_2 >> 3) & 0b111_u8;
+            assert_eq!(reg_field, 0b000_u8); // the REG field should always be 0b000 for this instruction
 
-            let mod_field = (byte_2 >> 6) & 0b11;
+            let mod_field = (byte_2 >> 6) & 0b11_u8;
             let rm_field = byte_2 & 0b111;
 
             match mod_field {
@@ -370,14 +395,12 @@ fn main() {
             assembled_file_str
                 .push_str(&format!("mov [{}], {}\n", memory_location, accumulator_reg));
         }
-
-        // ADD instructions
     }
 
     println!("{}", assembled_file_str);
     println!("File processed!");
 
-    if let Some(path) = outout_file {
+    if let Some(path) = output_file {
         fs::write(&path, assembled_file_str).expect("Unable to write file");
         println!("File written to {}", path);
     }
