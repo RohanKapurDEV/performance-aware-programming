@@ -188,6 +188,84 @@ fn main() {
             let mod_field = (byte_2 >> 6) & 0b11_u8;
             let reg_field = (byte_2 >> 3) & 0b111_u8;
             let rm_field = byte_2 & 0b111;
+
+            let reg = decode_register_field(reg_field, is_wide);
+
+            match mod_field {
+                0b11_u8 => {
+                    println!("Register mode found at index {}", i);
+                    let rm = decode_rm_field_at_mod_11(rm_field, is_wide);
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", reg, rm));
+                    } else {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", rm, reg));
+                    }
+                }
+
+                0b10_u8 => {
+                    println!("Memory mode (16bit displacement) found at index {}", i);
+                    let byte_3 = buf_iter.next().unwrap().1;
+                    let byte_4 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b01_u8 => {
+                    println!("Memory mode (8bit displacement) found at index {}", i);
+                    let displacement = *buf_iter.next().unwrap().1 as i8; // byte3 is the 8bit displacement
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("add {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b00_u8 => {
+                    println!("Memory mode (no displacement)* found at index {}", i);
+
+                    if rm_field == 0b110 {
+                        let byte_3 = buf_iter.next().unwrap().1;
+                        let byte_4 = buf_iter.next().unwrap().1;
+                        let address = i16::from_le_bytes([*byte_3, *byte_4]);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("add {}, [{}]\n", reg, address));
+                        } else {
+                            assembled_file_str.push_str(&format!("add {:04X}, {}\n", address, reg));
+                        }
+                    } else {
+                        let rm = decode_rm_field_at_mod_00(rm_field);
+                        let operand = format!("[{}]", rm);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("add {}, {}\n", reg, operand));
+                        } else {
+                            assembled_file_str.push_str(&format!("add {}, {}\n", operand, reg));
+                        }
+                    }
+                }
+
+                _ => {
+                    panic!("Unhandled mod field at index {}", i);
+                }
+            }
         }
 
         // Checking the first seven bits
