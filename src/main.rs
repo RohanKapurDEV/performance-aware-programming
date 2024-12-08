@@ -483,6 +483,41 @@ fn main() {
             }
         }
 
+        if let 0b0000010 = first_six_bits {
+            println!(
+                "Found an immediate-to-accumulator instruction at index {}",
+                i
+            );
+
+            let w_field = byte & 0b1;
+
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            let immediate = match w_field {
+                0b0 => {
+                    let data = buf_iter.next().unwrap().1;
+                    format!("{}", data)
+                }
+
+                0b1 => {
+                    let data_1 = buf_iter.next().unwrap().1;
+                    let data_2 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                    format!("{}", displacement)
+                }
+
+                _ => {
+                    panic!("Unhandled W field at index {}", i);
+                }
+            };
+
+            assembled_file_str.push_str(&format!("mov {}, {}\n", accumulator_reg, immediate));
+        }
+
         // Checking the first seven bits
         if let 0b1100011 = first_seven_bits {
             println!(
