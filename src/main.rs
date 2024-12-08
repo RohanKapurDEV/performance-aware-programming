@@ -483,9 +483,9 @@ fn main() {
             }
         }
 
-        if let 0b0000010 = first_six_bits {
+        if let 0b0000010 = first_seven_bits {
             println!(
-                "Found an immediate-to-accumulator instruction at index {}",
+                "Found an ADD immediate-to-accumulator instruction at index {}",
                 i
             );
 
