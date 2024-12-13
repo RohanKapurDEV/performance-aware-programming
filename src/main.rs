@@ -671,6 +671,129 @@ fn main() {
             assembled_file_str.push_str(&format!("sub {}, {}\n", accumulator_reg, immediate));
         }
 
+        if let 0b001110 = first_six_bits {
+            println!(
+                "Found a CMP Reg/memory and register instruction at index {}",
+                i
+            );
+
+            let d_field = (byte >> 1) & 0b1_u8;
+            let w_field = byte & 0b1;
+
+            let reg_is_dest = match d_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled D field at index {}", i),
+            };
+
+            let is_wide = match w_field {
+                0b0 => false,
+                0b1 => true,
+                _ => panic!("Unhandled W field at index {}", i),
+            };
+
+            let byte_2 = *buf_iter.next().unwrap().1;
+
+            let mod_field = (byte_2 >> 6) & 0b11_u8;
+            let reg_field = (byte_2 >> 3) & 0b111_u8;
+            let rm_field = byte_2 & 0b111;
+
+            let reg = decode_register_field(reg_field, is_wide);
+
+            match mod_field {
+                0b11 => {
+                    println!("Register mode found at index {}", i);
+                    let rm = decode_rm_field_at_mod_11(rm_field, is_wide);
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", reg, rm));
+                    } else {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", rm, reg));
+                    }
+                }
+
+                0b10 => {
+                    println!("Memory mode (16bit displacement) found at index {}", i);
+                    let byte_3 = buf_iter.next().unwrap().1;
+                    let byte_4 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*byte_3, *byte_4]);
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b01 => {
+                    println!("Memory mode (8bit displacement) found at index {}", i);
+                    let displacement = *buf_iter.next().unwrap().1 as i8; // byte3 is the 8bit displacement
+                    let rm = decode_rm_field_at_mod_10_and_mod_01(rm_field);
+                    let operand = match displacement.is_negative() {
+                        true => format!("[{}{}]", rm, displacement),
+                        false => format!("[{}+{}]", rm, displacement),
+                    };
+
+                    if reg_is_dest {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", reg, operand));
+                    } else {
+                        assembled_file_str.push_str(&format!("cmp {}, {}\n", operand, reg));
+                    }
+                }
+
+                0b00 => {
+                    println!("Memory mode (no displacement)* found at index {}", i);
+
+                    if rm_field == 0b110 {
+                        let byte_3 = buf_iter.next().unwrap().1;
+                        let byte_4 = buf_iter.next().unwrap().1;
+                        let address = i16::from_le_bytes([*byte_3, *byte_4]);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("cmp {}, [{}]\n", reg, address));
+                        } else {
+                            assembled_file_str.push_str(&format!("cmp {:04X}, {}\n", address, reg));
+                        }
+                    } else {
+                        let rm = decode_rm_field_at_mod_00(rm_field);
+                        let operand = format!("[{}]", rm);
+
+                        if reg_is_dest {
+                            assembled_file_str.push_str(&format!("cmp {}, {}\n", reg, operand));
+                        } else {
+                            assembled_file_str.push_str(&format!("cmp {}, {}\n", operand, reg));
+                        }
+                    }
+                }
+            }
+        }
+
+        if let 0b0011110 = first_seven_bits {
+            println!(
+                "Found a CMP immediate-to-accumulator instruction at index {}",
+                i
+            );
+
+            let w_field = byte & 0b1;
+
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            // This instruction never has a wide immediate operand (at least according to the
+            // documentation)
+            let immediate = *buf_iter.next().unwrap().1;
+
+            assembled_file_str.push_str(&format!("cmp {}, {}\n", accumulator_reg, immediate));
+        }
+
         // Checking the first seven bits
         if let 0b1100011 = first_seven_bits {
             println!(
