@@ -1006,6 +1006,20 @@ fn main() {
         }
 
         // Checking the full byte (Conditional jump instructions)
+        match first_full_byte {
+            0b01110100 => {
+                println!("Found a JE/JZ instruction at index {}", i);
+
+                let next_byte = buf_iter.next().unwrap().1;
+
+                let displacement = i8::from_le_bytes([*next_byte]);
+                assembled_file_str.push_str(&format!("je {}\n", displacement));
+            }
+
+            _ => {
+                println!("FFB - Unknown instruction found at index {}", i);
+            }
+        }
     }
 
     println!("{}", assembled_file_str);
