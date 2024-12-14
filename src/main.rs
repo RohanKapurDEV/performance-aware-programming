@@ -1016,6 +1016,42 @@ fn main() {
                 assembled_file_str.push_str(&format!("je {}\n", displacement));
             }
 
+            0b01111100 => {
+                println!("Found a JL/JNGE instruction at index {}", i);
+
+                let next_byte = buf_iter.next().unwrap().1;
+
+                let displacement = i8::from_le_bytes([*next_byte]);
+                assembled_file_str.push_str(&format!("jl {}\n", displacement));
+            }
+
+            0b01111110 => {
+                println!("Found a JLE/JNG instruction at index {}", i);
+
+                let next_byte = buf_iter.next().unwrap().1;
+
+                let displacement = i8::from_le_bytes([*next_byte]);
+                assembled_file_str.push_str(&format!("jle {}\n", displacement));
+            }
+
+            0b01110010 => {
+                println!("Found a JB/JNAE instruction at index {}", i);
+
+                let next_byte = buf_iter.next().unwrap().1;
+
+                let displacement = i8::from_le_bytes([*next_byte]);
+                assembled_file_str.push_str(&format!("jb {}\n", displacement));
+            }
+
+            0b01110110 => {
+                println!("Found a JBE/JNA instruction at index {}", i);
+
+                let next_byte = buf_iter.next().unwrap().1;
+
+                let displacement = i8::from_le_bytes([*next_byte]);
+                assembled_file_str.push_str(&format!("jbe {}\n", displacement));
+            }
+
             _ => {
                 println!("FFB - Unknown instruction found at index {}", i);
             }
