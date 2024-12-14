@@ -28,7 +28,7 @@ fn main() {
         let first_four_bits = (byte >> 4) & 0b1111_u8; // [immediate-to-register]
         let first_six_bits = (byte >> 2) & 0b111111_u8; // [register/memory-to/from-register]
         let first_seven_bits = (byte >> 1) & 0b1111111_u8; // [immediate-to-register/memory, memory-to-accumulator, accumulator-to-memory]
-        let first_full_byte = byte;
+        let first_full_byte = byte; // Use for conditional jump checks
 
         // Checking the first four bits
         if let 0b1011 = first_four_bits {
@@ -496,41 +496,6 @@ fn main() {
             }
         }
 
-        if let 0b0000010 = first_seven_bits {
-            println!(
-                "Found an ADD immediate-to-accumulator instruction at index {}",
-                i
-            );
-
-            let w_field = byte & 0b1;
-
-            let accumulator_reg = match w_field {
-                0b0 => "al",
-                0b1 => "ax",
-                _ => "Unknown",
-            };
-
-            let immediate = match w_field {
-                0b0 => {
-                    let data = buf_iter.next().unwrap().1;
-                    format!("{}", data)
-                }
-
-                0b1 => {
-                    let data_1 = buf_iter.next().unwrap().1;
-                    let data_2 = buf_iter.next().unwrap().1;
-                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                    format!("{}", displacement)
-                }
-
-                _ => {
-                    panic!("Unhandled W field at index {}", i);
-                }
-            };
-
-            assembled_file_str.push_str(&format!("mov {}, {}\n", accumulator_reg, immediate));
-        }
-
         if let 0b001010 = first_six_bits {
             println!(
                 "Found a SUB Reg/memory with register to either instruction at index {}",
@@ -635,41 +600,6 @@ fn main() {
                     panic!("Unhandled mod field at index {}", i);
                 }
             }
-        }
-
-        if let 0b0010110 = first_seven_bits {
-            println!(
-                "Found a SUB immediate-to-accumulator instruction at index {}",
-                i
-            );
-
-            let w_field = byte & 0b1;
-
-            let accumulator_reg = match w_field {
-                0b0 => "al",
-                0b1 => "ax",
-                _ => "Unknown",
-            };
-
-            let immediate = match w_field {
-                0b0 => {
-                    let data = buf_iter.next().unwrap().1;
-                    format!("{}", data)
-                }
-
-                0b1 => {
-                    let data_1 = buf_iter.next().unwrap().1;
-                    let data_2 = buf_iter.next().unwrap().1;
-                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                    format!("{}", displacement)
-                }
-
-                _ => {
-                    panic!("Unhandled W field at index {}", i);
-                }
-            };
-
-            assembled_file_str.push_str(&format!("sub {}, {}\n", accumulator_reg, immediate));
         }
 
         if let 0b001110 = first_six_bits {
@@ -778,6 +708,7 @@ fn main() {
             }
         }
 
+        // Checking the first seven bits
         if let 0b0011110 = first_seven_bits {
             println!(
                 "Found a CMP immediate-to-accumulator instruction at index {}",
@@ -799,7 +730,76 @@ fn main() {
             assembled_file_str.push_str(&format!("cmp {}, {}\n", accumulator_reg, immediate));
         }
 
-        // Checking the first seven bits
+        if let 0b0000010 = first_seven_bits {
+            println!(
+                "Found an ADD immediate-to-accumulator instruction at index {}",
+                i
+            );
+
+            let w_field = byte & 0b1;
+
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            let immediate = match w_field {
+                0b0 => {
+                    let data = buf_iter.next().unwrap().1;
+                    format!("{}", data)
+                }
+
+                0b1 => {
+                    let data_1 = buf_iter.next().unwrap().1;
+                    let data_2 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                    format!("{}", displacement)
+                }
+
+                _ => {
+                    panic!("Unhandled W field at index {}", i);
+                }
+            };
+
+            assembled_file_str.push_str(&format!("mov {}, {}\n", accumulator_reg, immediate));
+        }
+
+        if let 0b0010110 = first_seven_bits {
+            println!(
+                "Found a SUB immediate-to-accumulator instruction at index {}",
+                i
+            );
+
+            let w_field = byte & 0b1;
+
+            let accumulator_reg = match w_field {
+                0b0 => "al",
+                0b1 => "ax",
+                _ => "Unknown",
+            };
+
+            let immediate = match w_field {
+                0b0 => {
+                    let data = buf_iter.next().unwrap().1;
+                    format!("{}", data)
+                }
+
+                0b1 => {
+                    let data_1 = buf_iter.next().unwrap().1;
+                    let data_2 = buf_iter.next().unwrap().1;
+                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                    format!("{}", displacement)
+                }
+
+                _ => {
+                    panic!("Unhandled W field at index {}", i);
+                }
+            };
+
+            assembled_file_str.push_str(&format!("sub {}, {}\n", accumulator_reg, immediate));
+        }
+
         if let 0b1100011 = first_seven_bits {
             println!(
                 "Found an immediate-to-register/memory instruction at index {}",
