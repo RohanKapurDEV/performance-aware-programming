@@ -28,6 +28,7 @@ fn main() {
         let first_four_bits = (byte >> 4) & 0b1111_u8; // [immediate-to-register]
         let first_six_bits = (byte >> 2) & 0b111111_u8; // [register/memory-to/from-register]
         let first_seven_bits = (byte >> 1) & 0b1111111_u8; // [immediate-to-register/memory, memory-to-accumulator, accumulator-to-memory]
+        let first_full_byte = byte;
 
         // Checking the first four bits
         if let 0b1011 = first_four_bits {
@@ -770,6 +771,10 @@ fn main() {
                         }
                     }
                 }
+
+                _ => {
+                    panic!("Unhandled mod field at index {}", i);
+                }
             }
         }
 
@@ -999,6 +1004,8 @@ fn main() {
             assembled_file_str
                 .push_str(&format!("mov [{}], {}\n", memory_location, accumulator_reg));
         }
+
+        // Checking the full byte (Conditional jump instructions)
     }
 
     println!("{}", assembled_file_str);
