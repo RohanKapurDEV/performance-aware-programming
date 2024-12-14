@@ -357,10 +357,10 @@ fn main() {
                             let data_2 = buf_iter.next().unwrap().1;
                             if let true = is_signed {
                                 let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                                format!("{}", displacement)
+                                format!("word {}", displacement)
                             } else {
                                 let displacement = u16::from_le_bytes([*data_1, *data_2]);
-                                format!("{}", displacement)
+                                format!("word {}", displacement)
                             }
                         }
 
@@ -368,10 +368,10 @@ fn main() {
                             let data = buf_iter.next().unwrap().1;
                             if let true = is_signed {
                                 let displacement = i8::from_le_bytes([*data]);
-                                format!("{}", displacement)
+                                format!("byte {}", displacement)
                             } else {
                                 let displacement = u8::from_le_bytes([*data]);
-                                format!("{}", displacement)
+                                format!("byte {}", displacement)
                             }
                         }
                     };
@@ -398,10 +398,10 @@ fn main() {
                             let data_2 = buf_iter.next().unwrap().1;
                             if let true = is_signed {
                                 let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                                format!("{}", displacement)
+                                format!("word {}", displacement)
                             } else {
                                 let displacement = u16::from_le_bytes([*data_1, *data_2]);
-                                format!("{}", displacement)
+                                format!("word {}", displacement)
                             }
                         }
 
@@ -409,10 +409,10 @@ fn main() {
                             let data = buf_iter.next().unwrap().1;
                             if let true = is_signed {
                                 let displacement = i8::from_le_bytes([*data]);
-                                format!("{}", displacement)
+                                format!("byte {}", displacement)
                             } else {
                                 let displacement = u8::from_le_bytes([*data]);
-                                format!("{}", displacement)
+                                format!("byte {}", displacement)
                             }
                         }
                     };
@@ -435,10 +435,10 @@ fn main() {
                                 let data_2 = buf_iter.next().unwrap().1;
                                 if let true = is_signed {
                                     let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                                    format!("{}", displacement)
+                                    format!("word {}", displacement)
                                 } else {
                                     let displacement = u16::from_le_bytes([*data_1, *data_2]);
-                                    format!("{}", displacement)
+                                    format!("word {}", displacement)
                                 }
                             }
 
@@ -446,10 +446,10 @@ fn main() {
                                 let data = buf_iter.next().unwrap().1;
                                 if let true = is_signed {
                                     let displacement = i8::from_le_bytes([*data]);
-                                    format!("{}", displacement)
+                                    format!("byte {}", displacement)
                                 } else {
                                     let displacement = u8::from_le_bytes([*data]);
-                                    format!("{}", displacement)
+                                    format!("byte {}", displacement)
                                 }
                             }
                         };
@@ -466,10 +466,10 @@ fn main() {
                                 let data_2 = buf_iter.next().unwrap().1;
                                 if let true = is_signed {
                                     let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                                    format!("{}", displacement)
+                                    format!("word {}", displacement)
                                 } else {
                                     let displacement = u16::from_le_bytes([*data_1, *data_2]);
-                                    format!("{}", displacement)
+                                    format!("word {}", displacement)
                                 }
                             }
 
@@ -477,10 +477,10 @@ fn main() {
                                 let data = buf_iter.next().unwrap().1;
                                 if let true = is_signed {
                                     let displacement = i8::from_le_bytes([*data]);
-                                    format!("{}", displacement)
+                                    format!("byte {}", displacement)
                                 } else {
                                     let displacement = u8::from_le_bytes([*data]);
-                                    format!("{}", displacement)
+                                    format!("byte {}", displacement)
                                 }
                             }
                         };
