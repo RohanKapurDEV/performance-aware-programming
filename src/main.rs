@@ -31,32 +31,35 @@ fn main() {
         let first_full_byte = byte;
 
         // Checking the first four bits
-        if let 0b1011 = first_four_bits {
-            println!("Found an immediate-to-register instruction at index {}", i);
-            let w_field = (byte >> 3) & 0b1_u8;
-            let reg_field = byte & 0b111;
+        match first_four_bits {
+            0b1011 => {
+                println!("Found an immediate-to-register instruction at index {}", i);
+                let w_field = (byte >> 3) & 0b1_u8;
+                let reg_field = byte & 0b111;
 
-            match w_field {
-                0b0 => {
-                    let data = buf_iter.next().unwrap().1;
-                    let reg = decode_register_field(reg_field, false);
+                match w_field {
+                    0b0 => {
+                        let data = buf_iter.next().unwrap().1;
+                        let reg = decode_register_field(reg_field, false);
 
-                    assembled_file_str.push_str(&format!("mov {}, {}\n", reg, data));
-                }
-                0b1 => {
-                    let data_1 = buf_iter.next().unwrap().1;
-                    let data_2 = buf_iter.next().unwrap().1;
-                    let displacement = i16::from_le_bytes([*data_1, *data_2]);
-                    let reg = decode_register_field(reg_field, true);
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", reg, data));
+                    }
+                    0b1 => {
+                        let data_1 = buf_iter.next().unwrap().1;
+                        let data_2 = buf_iter.next().unwrap().1;
+                        let displacement = i16::from_le_bytes([*data_1, *data_2]);
+                        let reg = decode_register_field(reg_field, true);
 
-                    assembled_file_str.push_str(&format!("mov {}, {}\n", reg, displacement));
+                        assembled_file_str.push_str(&format!("mov {}, {}\n", reg, displacement));
+                    }
+                    _ => {
+                        panic!("Unhandled W field at index {}", i);
+                    }
                 }
-                _ => {
-                    panic!("Unhandled W field at index {}", i);
-                }
+
+                continue;
             }
-
-            continue;
+            _ => {}
         }
 
         // Checking the first six bits
