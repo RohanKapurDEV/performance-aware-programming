@@ -56,8 +56,6 @@ fn main() {
                         panic!("Unhandled W field at index {}", i);
                     }
                 }
-
-                continue;
             }
 
             _ => {}
@@ -169,8 +167,6 @@ fn main() {
                         panic!("Unhandled mod field at index {}", i);
                     }
                 }
-
-                continue;
             }
 
             0b000000 => {
