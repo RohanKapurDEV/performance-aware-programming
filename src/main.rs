@@ -6,6 +6,7 @@ use std::{
 };
 
 mod cli;
+mod register_map;
 
 use cli::Args;
 
