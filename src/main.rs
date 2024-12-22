@@ -6,9 +6,10 @@ use std::{
 };
 
 mod cli;
-mod register_map;
+mod cpu_state;
 
 use cli::Args;
+use cpu_state::*;
 
 fn main() {
     let args = Args::parse();
@@ -21,6 +22,8 @@ fn main() {
 
     // Final assembled string of the file - mutated over the course of the loop
     let mut assembled_file_str = "bits 16\n\n".to_string();
+    // Initialize empty registers
+    let cpu_state = CpuState::new();
 
     // Loop through the buffer
     while let Some((i, byte)) = buf_iter.next() {
