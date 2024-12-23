@@ -133,4 +133,16 @@ impl CpuState {
             _ => panic!("Unknown register: {}", register),
         }
     }
+
+    pub fn print_register_state(&self) {
+        println!(format!("ax: {:#X}", self.ax.get()));
+        println!(format!("bx: {:#X}", self.bx.get()));
+        println!(format!("cx: {:#X}", self.cx.get()));
+        println!(format!("dx: {:#X}", self.dx.get()));
+        println!(format!("si: {:#X}", self.si.get()));
+        println!(format!("di: {:#X}", self.di.get()));
+        println!(format!("bp: {:#X}", self.bp.get()));
+        println!(format!("sp: {:#X}", self.sp.get()));
+        println!(format!("ip: {:#X}", self.ip.get()));
+    }
 }
