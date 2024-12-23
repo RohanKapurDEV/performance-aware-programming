@@ -7,4 +7,7 @@ pub struct Args {
 
     #[arg(long, short = 'o', default_value = "./output_recent.asm")]
     pub output_file: Option<String>,
+
+    #[arg(long, short = 's', default_value = "0")]
+    pub sim: bool,
 }

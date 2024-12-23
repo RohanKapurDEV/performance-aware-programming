@@ -73,4 +73,33 @@ impl CpuState {
             ip: Register::new(),
         }
     }
+
+    pub fn set_new_register_value(&mut self, register: &str, value: u16) {
+        match register {
+            "al" => self.ax.set_low(value as u8),
+            "ah" => self.ax.set_high(value as u8),
+            "ax" => self.ax.set(value),
+
+            "bl" => self.bx.set_low(value as u8),
+            "bh" => self.bx.set_high(value as u8),
+            "bx" => self.bx.set(value),
+
+            "cl" => self.cx.set_low(value as u8),
+            "ch" => self.cx.set_high(value as u8),
+            "cx" => self.cx.set(value),
+
+            "dl" => self.dx.set_low(value as u8),
+            "dh" => self.dx.set_high(value as u8),
+            "dx" => self.dx.set(value),
+
+            "si" => self.si.set(value),
+            "di" => self.di.set(value),
+            "bp" => self.bp.set(value),
+            "sp" => self.sp.set(value),
+
+            "ip" => self.ip.set(value),
+
+            _ => panic!("Unknown register: {}", register),
+        }
+    }
 }

@@ -1,15 +1,15 @@
 use clap::Parser;
-use std::{
-    fs,
-    iter::{Enumerate, Peekable},
-    slice::Iter,
-};
+use std::fs;
+use std::iter::{Enumerate, Peekable};
+use std::slice::Iter;
 
 mod cli;
 mod cpu_state;
 
 use cli::Args;
 use cpu_state::*;
+
+type AsmBuffer<'a> = Peekable<Enumerate<Iter<'a, u8>>>;
 
 fn main() {
     let args = Args::parse();
@@ -18,7 +18,7 @@ fn main() {
     println!("Selected file: {}", file_path);
 
     let file_buffer = fs::read(file_path).expect("Unable to open file");
-    let mut buf_iter: Peekable<Enumerate<Iter<u8>>> = file_buffer.iter().enumerate().peekable();
+    let mut buf_iter: AsmBuffer = file_buffer.iter().enumerate().peekable();
 
     // Final assembled string of the file - mutated over the course of the loop
     let mut assembled_file_str = "bits 16\n\n".to_string();
