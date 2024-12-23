@@ -1104,6 +1104,12 @@ fn main() {
         fs::write(&path, assembled_file_str).expect("Unable to write file");
         println!("File written to {}", path);
     }
+
+    if should_sim {
+        // Print the register state
+        println!("Final state:");
+        cpu_state.print_register_state()
+    }
 }
 
 fn decode_rm_field_at_mod_11<'a>(rm_field: u8, w_field: bool) -> &'a str {
