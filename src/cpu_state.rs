@@ -139,9 +139,9 @@ impl CpuState {
         println!("bx: {:#X} ({})", self.bx.get(), self.bx.get());
         println!("cx: {:#X} ({})", self.cx.get(), self.cx.get());
         println!("dx: {:#X} ({})", self.dx.get(), self.dx.get());
+        println!("sp: {:#X} ({})", self.sp.get(), self.sp.get());
+        println!("bp: {:#X} ({})", self.bp.get(), self.bp.get());
         println!("si: {:#X} ({})", self.si.get(), self.si.get());
         println!("di: {:#X} ({})", self.di.get(), self.di.get());
-        println!("bp: {:#X} ({})", self.bp.get(), self.bp.get());
-        println!("sp: {:#X} ({})", self.sp.get(), self.sp.get());
     }
 }
