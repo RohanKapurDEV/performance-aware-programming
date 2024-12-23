@@ -17,13 +17,15 @@ fn main() {
     let output_file = args.output_file;
     println!("Selected file: {}", file_path);
 
+    let should_sim = args.sim;
+
     let file_buffer = fs::read(file_path).expect("Unable to open file");
     let mut buf_iter: AsmBuffer = file_buffer.iter().enumerate().peekable();
 
     // Final assembled string of the file - mutated over the course of the loop
     let mut assembled_file_str = "bits 16\n\n".to_string();
     // Initialize empty registers
-    let cpu_state = CpuState::new();
+    let mut cpu_state = CpuState::new();
 
     // Loop through the buffer
     while let Some((i, byte)) = buf_iter.next() {
@@ -47,6 +49,19 @@ fn main() {
                         let reg = decode_register_field(reg_field, false);
 
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, data));
+
+                        if should_sim {
+                            let current_reg_value = cpu_state.get_register_value(reg);
+                            let new_reg_value = *data;
+                            cpu_state.set_new_register_value(reg, new_reg_value as u16);
+                            assembled_file_str.push_str(
+                                format!(
+                                    "; {}: 0x{:02x} -> 0x{:02x}\n",
+                                    reg, current_reg_value, new_reg_value
+                                )
+                                .as_str(),
+                            );
+                        }
                     }
                     0b1 => {
                         let data_1 = buf_iter.next().unwrap().1;

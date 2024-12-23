@@ -74,6 +74,37 @@ impl CpuState {
         }
     }
 
+    /// Get value of the register
+    pub fn get_register_value(&self, register: &str) -> u16 {
+        match register {
+            "al" => self.ax.get_low() as u16,
+            "ah" => self.ax.get_high() as u16,
+            "ax" => self.ax.get(),
+
+            "bl" => self.bx.get_low() as u16,
+            "bh" => self.bx.get_high() as u16,
+            "bx" => self.bx.get(),
+
+            "cl" => self.cx.get_low() as u16,
+            "ch" => self.cx.get_high() as u16,
+            "cx" => self.cx.get(),
+
+            "dl" => self.dx.get_low() as u16,
+            "dh" => self.dx.get_high() as u16,
+            "dx" => self.dx.get(),
+
+            "si" => self.si.get(),
+            "di" => self.di.get(),
+            "bp" => self.bp.get(),
+            "sp" => self.sp.get(),
+
+            "ip" => self.ip.get(),
+
+            _ => panic!("Unknown register: {}", register),
+        }
+    }
+
+    /// Set new value for the register
     pub fn set_new_register_value(&mut self, register: &str, value: u16) {
         match register {
             "al" => self.ax.set_low(value as u8),
