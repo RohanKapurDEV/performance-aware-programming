@@ -54,6 +54,7 @@ fn main() {
                             let current_reg_value = cpu_state.get_register_value(reg);
                             let new_reg_value = *data;
                             cpu_state.set_new_register_value(reg, new_reg_value as u16);
+
                             assembled_file_str.push_str(
                                 format!(
                                     "; {}: 0x{:02x} -> 0x{:02x}\n",
@@ -63,6 +64,7 @@ fn main() {
                             );
                         }
                     }
+
                     0b1 => {
                         let data_1 = buf_iter.next().unwrap().1;
                         let data_2 = buf_iter.next().unwrap().1;
