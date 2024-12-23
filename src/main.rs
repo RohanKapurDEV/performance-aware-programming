@@ -72,6 +72,20 @@ fn main() {
                         let reg = decode_register_field(reg_field, true);
 
                         assembled_file_str.push_str(&format!("mov {}, {}\n", reg, displacement));
+
+                        if should_sim {
+                            let current_reg_value = cpu_state.get_register_value(reg);
+                            let new_reg_value = displacement;
+                            cpu_state.set_new_register_value(reg, new_reg_value as u16);
+
+                            assembled_file_str.push_str(
+                                format!(
+                                    "; {}: 0x{:02x} -> 0x{:02x}\n",
+                                    reg, current_reg_value, new_reg_value
+                                )
+                                .as_str(),
+                            );
+                        }
                     }
                     _ => {
                         panic!("Unhandled W field at index {}", i);
