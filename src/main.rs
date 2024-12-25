@@ -132,6 +132,10 @@ fn main() {
 
                         if reg_is_dest {
                             assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
+
+                            if should_sim {
+                                todo!()
+                            }
                         } else {
                             assembled_file_str.push_str(&format!("mov {}, {}\n", rm, reg));
                         }
