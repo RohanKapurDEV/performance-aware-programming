@@ -134,10 +134,34 @@ fn main() {
                             assembled_file_str.push_str(&format!("mov {}, {}\n", reg, rm));
 
                             if should_sim {
-                                todo!()
+                                let current_reg_value = cpu_state.get_register_value(reg);
+                                let new_reg_value = cpu_state.get_register_value(rm);
+                                cpu_state.set_new_register_value(reg, new_reg_value);
+
+                                assembled_file_str.push_str(
+                                    format!(
+                                        "; {}: 0x{:02x} -> 0x{:02x}\n",
+                                        reg, current_reg_value, new_reg_value
+                                    )
+                                    .as_str(),
+                                );
                             }
                         } else {
                             assembled_file_str.push_str(&format!("mov {}, {}\n", rm, reg));
+
+                            if should_sim {
+                                let current_reg_value = cpu_state.get_register_value(rm);
+                                let new_reg_value = cpu_state.get_register_value(reg);
+                                cpu_state.set_new_register_value(rm, new_reg_value);
+
+                                assembled_file_str.push_str(
+                                    format!(
+                                        "; {}: 0x{:02x} -> 0x{:02x}\n",
+                                        rm, current_reg_value, new_reg_value
+                                    )
+                                    .as_str(),
+                                );
+                            }
                         }
                     }
 
