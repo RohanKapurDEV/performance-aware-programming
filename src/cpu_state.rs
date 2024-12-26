@@ -55,6 +55,10 @@ pub struct CpuState {
 
     // Instruction pointer
     pub ip: Register,
+
+    // Flags
+    pub sign_flag: bool,
+    pub zero_flag: bool,
 }
 
 impl CpuState {
@@ -71,6 +75,9 @@ impl CpuState {
             sp: Register::new(),
 
             ip: Register::new(),
+
+            sign_flag: false,
+            zero_flag: false,
         }
     }
 
