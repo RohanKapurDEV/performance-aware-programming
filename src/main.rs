@@ -1180,17 +1180,17 @@ fn main() {
     }
 
     println!("{}", assembled_file_str);
-    println!("File processed!");
-
-    if let Some(path) = output_file {
-        fs::write(&path, assembled_file_str).expect("Unable to write file");
-        println!("File written to {}", path);
-    }
 
     if should_sim {
         // Print the register state
         println!("Final state:");
         cpu_state.print_register_state()
+    }
+
+    println!("File processed!");
+    if let Some(path) = output_file {
+        fs::write(&path, assembled_file_str).expect("Unable to write file");
+        println!("File written to {}", path);
     }
 }
 
