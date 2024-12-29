@@ -267,6 +267,8 @@ fn main() {
 
                         if reg_is_dest {
                             assembled_file_str.push_str(&format!("add {}, {}\n", reg, rm));
+
+                            if should_sim {}
                         } else {
                             assembled_file_str.push_str(&format!("add {}, {}\n", rm, reg));
                         }
@@ -1133,9 +1135,7 @@ fn main() {
                 assembled_file_str.push_str(&format!("jbe {}\n", displacement));
             }
 
-            _ => {
-                println!("FFB - Unknown instruction found at index {}", i);
-            }
+            _ => {}
         }
     }
 
