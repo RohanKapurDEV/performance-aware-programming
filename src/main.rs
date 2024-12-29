@@ -267,8 +267,6 @@ fn main() {
 
                         if reg_is_dest {
                             assembled_file_str.push_str(&format!("add {}, {}\n", reg, rm));
-
-                            if should_sim {}
                         } else {
                             assembled_file_str.push_str(&format!("add {}, {}\n", rm, reg));
                         }
@@ -410,6 +408,48 @@ fn main() {
 
                         assembled_file_str
                             .push_str(&format!("{} {}, {}\n", ix_code, rm, immediate));
+
+                        if should_sim {
+                            let mut set_zero = false;
+                            let set_sign: bool;
+
+                            match ix_code {
+                                "add" => {
+                                    let current_reg_value = cpu_state.get_register_value(rm);
+                                    let new_reg_value =
+                                        current_reg_value + immediate.parse::<u16>().unwrap();
+                                    cpu_state.set_new_register_value(rm, new_reg_value);
+
+                                    if new_reg_value == 0 {
+                                        cpu_state.set_flag("zero", true);
+                                        set_zero = true;
+                                    } else {
+                                        cpu_state.set_flag("zero", false);
+                                        set_zero = false;
+                                    }
+                                }
+                                "sub" => {
+                                    let current_reg_value = cpu_state.get_register_value(rm);
+                                    let new_reg_value =
+                                        current_reg_value - immediate.parse::<u16>().unwrap();
+                                    cpu_state.set_new_register_value(rm, new_reg_value);
+
+                                    if new_reg_value == 0 {
+                                        cpu_state.set_flag("zero", true);
+                                        set_zero = true;
+                                    } else {
+                                        cpu_state.set_flag("zero", false);
+                                        set_zero = false;
+                                    }
+                                }
+                                // "cmp" => {}
+                                _ => {}
+                            }
+
+                            if set_zero {
+                                assembled_file_str.push_str("; Zero flag set\n");
+                            }
+                        }
                     }
 
                     0b01 => {

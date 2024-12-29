@@ -151,4 +151,12 @@ impl CpuState {
         println!("si: {:#X} ({})", self.si.get(), self.si.get());
         println!("di: {:#X} ({})", self.di.get(), self.di.get());
     }
+
+    pub fn set_flag(&mut self, flag: &str, value: bool) {
+        match flag {
+            "sign" => self.sign_flag = value,
+            "zero" => self.zero_flag = value,
+            _ => panic!("Unknown flag: {}", flag),
+        }
+    }
 }
