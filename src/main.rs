@@ -411,7 +411,7 @@ fn main() {
 
                         if should_sim {
                             let mut set_zero = false;
-                            let set_sign: bool;
+                            let set_sign: bool; // too lazy to implement this but its the same in principle as the zero flag
 
                             match ix_code {
                                 "add" => {
