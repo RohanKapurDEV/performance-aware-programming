@@ -428,6 +428,7 @@ fn main() {
                                         set_zero = false;
                                     }
                                 }
+
                                 "sub" => {
                                     let current_reg_value = cpu_state.get_register_value(rm);
                                     let new_reg_value =
@@ -442,6 +443,7 @@ fn main() {
                                         set_zero = false;
                                     }
                                 }
+
                                 // "cmp" => {}
                                 _ => {}
                             }
