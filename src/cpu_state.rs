@@ -150,6 +150,7 @@ impl CpuState {
         println!("bp: {:#X} ({})", self.bp.get(), self.bp.get());
         println!("si: {:#X} ({})", self.si.get(), self.si.get());
         println!("di: {:#X} ({})", self.di.get(), self.di.get());
+        println!("ip: {:#X} ({})", self.ip.get(), self.ip.get());
     }
 
     pub fn set_flag(&mut self, flag: &str, value: bool) {
