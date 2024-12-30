@@ -54,7 +54,7 @@ pub struct CpuState {
     pub sp: Register,
 
     // Instruction pointer
-    pub ip: Register,
+    pub ip: i16,
 
     // Flags
     pub sign_flag: bool,
@@ -74,11 +74,15 @@ impl CpuState {
             bp: Register::new(),
             sp: Register::new(),
 
-            ip: Register::new(),
+            ip: 0_i16,
 
             sign_flag: false,
             zero_flag: false,
         }
+    }
+
+    pub fn modify_ip(&mut self, value: i16) {
+        self.ip += value;
     }
 
     /// Get value of the register
@@ -105,10 +109,12 @@ impl CpuState {
             "bp" => self.bp.get(),
             "sp" => self.sp.get(),
 
-            "ip" => self.ip.get(),
-
             _ => panic!("Unknown register: {}", register),
         }
+    }
+
+    pub fn get_ip(&self) -> i16 {
+        self.ip
     }
 
     /// Set new value for the register
@@ -135,7 +141,7 @@ impl CpuState {
             "bp" => self.bp.set(value),
             "sp" => self.sp.set(value),
 
-            "ip" => self.ip.set(value),
+            "ip" => panic!("Cannot set IP directly, use modify_ip() instead"),
 
             _ => panic!("Unknown register: {}", register),
         }
@@ -150,7 +156,7 @@ impl CpuState {
         println!("bp: {:#X} ({})", self.bp.get(), self.bp.get());
         println!("si: {:#X} ({})", self.si.get(), self.si.get());
         println!("di: {:#X} ({})", self.di.get(), self.di.get());
-        println!("ip: {:#X} ({})", self.ip.get(), self.ip.get());
+        println!("ip: ({})", self.ip);
     }
 
     pub fn set_flag(&mut self, flag: &str, value: bool) {
